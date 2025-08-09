@@ -1,13 +1,32 @@
 name: Build Yarn Cache
-on: workflow_dispatch          # תריץ ידנית פעם אחת
+on: workflow_dispatch
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: corepack enable && yarn install --immutable
-      - run: tar -czf yarn-cache.tgz .yarn .pnp.cjs
-      - uses: actions/upload-artifact@v4
+
+      - name: Prepare Yarn PnP
+        run: |
+          corepack enable
+          yarn set version stable
+          yarn config set nodeLinker pnp
+          yarn --version
+
+      - name: Install deps (PnP)
+        run: yarn install --immutable
+
+      - name: Pack Yarn cache (zip)
+        run: |
+          ls -la
+          # אריזה גמישה: .yarn + קובצי PnP אם קיימים
+          tar -czf yarn-cache.tgz .yarn .pnp.cjs .pnp.loader.mjs 2>/dev/null || \
+          tar -czf yarn-cache.tgz .yarn .pnp.cjs 2>/dev/null || \
+          tar -czf yarn-cache.tgz .yarn
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
           name: yarn-cache
           path: yarn-cache.tgz
