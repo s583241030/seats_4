@@ -14,13 +14,18 @@ jobs:
           yarn config set nodeLinker pnp
           yarn --version
 
-      - name: Install deps (PnP)
-        run: yarn install --immutable
+      - name: Install deps (create lockfile if missing)
+        run: |
+          if [ -f yarn.lock ]; then
+            echo "yarn.lock exists → immutable install"
+            yarn install --immutable
+          else
+            echo "yarn.lock missing → regular install to create it"
+            yarn install
+          fi
 
       - name: Pack Yarn cache (zip)
         run: |
-          ls -la
-          # אריזה גמישה: .yarn + קובצי PnP אם קיימים
           tar -czf yarn-cache.tgz .yarn .pnp.cjs .pnp.loader.mjs 2>/dev/null || \
           tar -czf yarn-cache.tgz .yarn .pnp.cjs 2>/dev/null || \
           tar -czf yarn-cache.tgz .yarn
