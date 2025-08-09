@@ -14,14 +14,15 @@ jobs:
           yarn config set nodeLinker pnp
           yarn --version
 
+      # אם אין yarn.lock – נריץ התקנה לא-אימוטבילית במפורש
       - name: Install deps (create lockfile if missing)
         run: |
           if [ -f yarn.lock ]; then
             echo "yarn.lock exists → immutable install"
             yarn install --immutable
           else
-            echo "yarn.lock missing → regular install to create it"
-            yarn install
+            echo "yarn.lock missing → non-immutable install to create it"
+            YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
           fi
 
       - name: Pack Yarn cache (zip)
